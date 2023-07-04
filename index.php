@@ -21,6 +21,12 @@
         unset($_POST["submit"]);
     }
     // End - Import the file to database
+    
+    // Start - Fetch Data from Database
+        
+    
+    $fetch_sql = "SELECT sale_id, customer_name, customer_mail, product_id, product_name, product_price, sale_date FROM bs_sales";
+    // End = Fetch Data from database
 ?>
 <!DOCTYPE html>
 <html class="loading" lang="en" data-textdirection="ltr">
@@ -36,5 +42,24 @@
             <input type="file" name="fileToUpload" id="fileToUpload">
             <input type="submit" value="Import" name="submit">
         </form>
+        <h3>Sales Data</h3>
+        <!-- HTML Table to show results -->
+        <table>
+            <tr><th>Sale Id</th><th>Customer Name</th><th>Customer Email</th><th>Product ID</th><th>Product Name</th><th>Product Price</th><th>Sale Date</th></tr>
+            <?php
+                $total_price = 0;
+                $conn = mysqli_connect($servername, $username, $password, $db);                
+                if($fetch_result = $conn->query($fetch_sql)){
+                    // for pagination
+                    $total_records = mysqli_num_rows($fetch_result);
+                    while ($result = $fetch_result->fetch_assoc()){
+                        $total_price += $result['product_price'];
+                        echo "<tr><td>".$result['sale_id']."</td><td>".$result['customer_name']."</td><td>".$result['customer_mail']."</td><td>".$result['product_id']."</td><td>".$result['product_name']."</td><td>".$result['product_price']."</td><td>".$result['sale_date']."</td></tr>";
+                    }
+                }
+                echo "<tr><th></th><th></th><th></th><th></th><th>Total Price</th><th>".$total_price."</th><th></th></tr>";
+                $conn->close();
+            ?>
+        </table>
     </body>
 </html>
