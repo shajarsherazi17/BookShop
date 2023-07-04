@@ -58,6 +58,36 @@
         unset($_POST['submit_search_form']);
     }
     // End - Fetch Data from Database with or without filters
+
+    // Start - Pagination and limit the 15 records per page    
+    $conn = mysqli_connect($servername, $username, $password, $db);                
+    $fetch_result_count = $conn->query($fetch_sql);
+    $total_records = mysqli_num_rows($fetch_result_count);
+    
+    if(isset($_POST['btn_prev_page'])){ // if Previous button clicked then action 
+        $org_fetch_sql = $_POST['fetch_sql']; // to reserve the original query for next iteration        
+        //echo 'this is the hidden value'
+        $page_no = $_POST['page_no'];
+        $fetch_sql = $org_fetch_sql. " LIMIT $page_no, 15"; 
+        $page_no -=15;
+        if($page_no < 0)
+            $page_no = 0;
+        unset($_POST['btn_prev_page']);
+    }else if(isset($_POST['btn_next_page'])){ // if Next button clicked then action
+        $org_fetch_sql = $_POST['fetch_sql']; // to reserve the original query for next iteration
+        $page_no = $_POST['page_no'];
+        echo "page no in next $page_no <br/>";
+        $fetch_sql = $org_fetch_sql. " LIMIT $page_no, 15";
+        $page_no += 15;
+        unset($_POST['btn_next_page']);
+    }else{ // If none of pagination button clicked then load by default first 15 records
+        $page_no = 0;
+        $org_fetch_sql = $fetch_sql; // to reserve the original query for first page load
+        if ($total_records/15 > 1){
+            $fetch_sql .= " LIMIT 0, 15"; 
+            $page_no = settype($page_no, "integer") + 15;
+        }
+    }
 ?>
 <!DOCTYPE html>
 <html class="loading" lang="en" data-textdirection="ltr">
@@ -85,6 +115,12 @@
             </form>
             <!-- End - Search by filters -->
         </div>
+        <form action="" name="pagination_form" method="post">
+            <input type="hidden" value="<?php echo $page_no;?>" name="page_no">
+            <input type="hidden" value="<?php echo $org_fetch_sql;?>" name="fetch_sql">
+            <input type="submit" name="btn_prev_page" value="Prev">
+            <input type="submit" name="btn_next_page" value="Next">
+        </form>
         <!-- HTML Table to show results -->
         <table>
             <tr><th>Sale Id</th><th>Customer Name</th><th>Customer Email</th><th>Product ID</th><th>Product Name</th><th>Product Price</th><th>Sale Date</th></tr>
