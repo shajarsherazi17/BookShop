@@ -22,11 +22,42 @@
     }
     // End - Import the file to database
     
-    // Start - Fetch Data from Database
-        
-    
+    // Start - Fetch Data from Database with or without filters
     $fetch_sql = "SELECT sale_id, customer_name, customer_mail, product_id, product_name, product_price, sale_date FROM bs_sales";
-    // End = Fetch Data from database
+    
+    // Declare default empty variables for search fields
+    $srch_by_customer = '';
+    $srch_by_product = '';
+    $srch_by_price = '';
+
+    if (isset($_POST['submit_search_form'])){
+        $srch_by_customer = $_POST['srch_by_customer'];
+        $srch_by_product = $_POST['srch_by_product'];
+        $srch_by_price = $_POST['srch_by_price'];
+        // if any of search filter is provided then add the where clause
+        if($srch_by_price <> '' || $srch_by_customer <> '' || $srch_by_product <> '')
+            $fetch_sql .= " WHERE";
+
+        // search by Customer
+        if($srch_by_customer <> ''){
+            $fetch_sql .= " customer_name like '%".$srch_by_customer."%' ";
+        }
+        // Search by product and make sure the AND operator is working properly
+        if($srch_by_product <> '' && $srch_by_customer <> ''){
+            $fetch_sql .= " AND product_name like '%".$srch_by_product."%' ";
+        }else if($srch_by_product <> ''){
+            $fetch_sql .= " product_name like '%".$srch_by_product."%' ";
+        }
+        // Search by price and make sure the AND operator is working with other columns too
+        if($srch_by_price <> '' && ($srch_by_customer <> '' || $srch_by_product <> '')){
+            $fetch_sql .= " AND product_price = '".$srch_by_price."' ";
+        }else if($srch_by_price <> '' ){
+            $fetch_sql .= " product_price = '".$srch_by_price."' ";
+        }
+        $org_fetch_sql = $fetch_sql; // to preserve the original query with where clause 
+        unset($_POST['submit_search_form']);
+    }
+    // End - Fetch Data from Database with or without filters
 ?>
 <!DOCTYPE html>
 <html class="loading" lang="en" data-textdirection="ltr">
@@ -43,6 +74,17 @@
             <input type="submit" value="Import" name="submit">
         </form>
         <h3>Sales Data</h3>
+        <div>
+            <!-- Start - Search by filters -->
+            <form action="" name="form_search_data" method="post">
+                Search Data:
+                <input type="text" placeholder="Search by Customer" name="srch_by_customer" title="Search By Customer" value="<?php echo $srch_by_customer;?>">
+                <input type="text" placeholder="Search by Product"  name="srch_by_product" title="Search By Product" value="<?php echo $srch_by_product;?>">
+                <input type="text" placeholder="Search by Price"  name="srch_by_price" title="Search By Price" value="<?php echo $srch_by_price;?>">
+                <input type="submit" name="submit_search_form" value="Search" title="Search" />
+            </form>
+            <!-- End - Search by filters -->
+        </div>
         <!-- HTML Table to show results -->
         <table>
             <tr><th>Sale Id</th><th>Customer Name</th><th>Customer Email</th><th>Product ID</th><th>Product Name</th><th>Product Price</th><th>Sale Date</th></tr>
